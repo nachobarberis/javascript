@@ -1,5 +1,5 @@
 .contenedor{
-    width: 80%; 
+    width: 90%; 
     display: flex; 
     flex-direction: row; 
     align-content: flex-start;
@@ -18,6 +18,10 @@
     margin-left: 20px;
     margin-top: 10px;
     width: 13rem;
+}
+
+#bloqueProductos{
+    width: 90%;
 }
 
 #btnFinalizar{

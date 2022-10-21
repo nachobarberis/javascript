@@ -1,5 +1,9 @@
 let valorIncial, valorFinal;
 let pagar=false;
+let valorDolar = 1;
+
+//Array que guardará los productos
+const productos = [];
 
 //Array que guardará el carrito de compras
 const miCarrito = [];
@@ -11,56 +15,85 @@ const opcionesCuotas = [{id: 1, cantCuotas: 1, interes: 0},
                     {id:4, cantCuotas: 12, interes: 50},
 ];
 
-//Array que guarda las categorias de los productos
-const categoriasProducto = [{id: 1, nombre: 'Audio/Video'},
-                        {id: 2, nombre: 'Cocina'},
-                        {id: 3, nombre: 'Cuidado Personal'}
-];
+//Array que guardará las categorias de los productos
+const categoriasProducto = [];
 
 const categoriasSeleccionadas = [];
 
-//Funcion para mostrar los productos en pantalla
-function pintarProductos(){
-    
-    pedirProductos();
+//Obtiene la cotización del dólar oficial para la venta
+async function consultarDolar() {
 
-}
-
-const pedirProductos = async () => {
-    alert("Hola")
-    let cadena = "";
-    const response = await fetch('productos.json');
+    const response = await fetch('https://api.bluelytics.com.ar/v2/latest');
     const data = await response.json();
 
-    data.forEach((producto) => {
-    if(categoriasSeleccionadas.includes(producto.categoria)){
-        cadena = cadena + `
-                <div id="producto" class="card">
-                <img src="${producto.img}" class="card-img-top" alt="...">
-                <div class="card-body">
-                    <h5 class="card-title">${producto.nombre}</h5>
-                    <p class="card-text">$${producto.precio}</p>
-                    <button type="button" id="${producto.id}" class="btn btn-lg btn-primary" onClick="btnAgregar_click(${producto.id})">Agregar</button>
-                </div>
-                </div>
-                `;
-            }else{
-                cadena = cadena + `
-                <div id="producto" class="card">
-                <img src="${producto.img}" class="card-img-top" alt="...">
-                <div class="card-body">
-                    <h5 class="card-title">${producto.nombre}</h5>
-                    <p class="card-text">$${producto.precio}</p>
-                    <button type="button" id="${producto.id}" class="btn btn-lg btn-primary" onClick="btnAgregar_click(${producto.id})" disabled>Agotado</button>
-                </div>
-                </div>
-                `;
-            }
-    })
+    valorDolar = data.oficial.value_sell;
 
-    let container = document.getElementById('productos');
-    container.innerHTML = cadena;
+    //Obtiene los productos
+    obtenerProductos();
+
 };
+
+consultarDolar();
+
+//Obtiene los productos y los guarda en un array con los precios pesificados
+function obtenerProductos() {
+
+    fetch('/productos.json')
+    .then((response) => response.json())
+    .then((productosObtenidos) => {
+
+        for(const producto of productosObtenidos){
+            productos.push({id:producto.id,nombre:producto.nombre,precio:producto.precio*valorDolar,img:producto.img,stock:producto.stock,categoria:producto.categoria});          
+        }
+
+        console.log(productos);
+
+        pintarCategorias();      
+     
+    })
+};
+
+//Funcion para mostrar los productos en pantalla
+function pintarProductos(){
+
+    let cadena = "";
+
+        for(const producto of productos){
+            
+            //Pinta los productos en pantalla
+            if(categoriasSeleccionadas.includes(producto.categoria)){
+                if(producto.stock>0){
+                    console.log(producto.img);
+                    cadena = cadena + `
+                    <div id="producto" class="card">
+                    <img src="${producto.img}" class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title">${producto.nombre}</h5>
+                        <p class="card-text">$${producto.precio}</p>
+                        <button type="button" id="${producto.id}" class="btn btn-lg btn-primary" onClick="btnAgregar_click(${producto.id})">Agregar</button>
+                    </div>
+                    </div>
+                    `;
+                }else{
+                    cadena = cadena + `
+                    <div id="producto" class="card">
+                    <img src="${producto.img}" class="card-img-top" alt="...">
+                    <div class="card-body">
+                        <h5 class="card-title">${producto.nombre}</h5>
+                        <p class="card-text">$${producto.precio}</p>
+                        <button type="button" id="${producto.id}" class="btn btn-lg btn-secondary" onClick="btnAgregar_click(${producto.id})" disabled>Agotado</button>
+                    </div>
+                    </div>
+                    `;
+                }
+            }
+           
+        }
+
+        let container = document.getElementById('productos');
+        container.innerHTML = cadena;      
+
+}
 
 //Cargar carrito
 function cargarCarrito(){
@@ -69,10 +102,9 @@ function cargarCarrito(){
 
     if(carrito !== null){
         for(const item of carrito){
-            miCarrito.push({id:item.id,nombre:item.nombre,precio:item.precio,cantidad:1,img:item.img}); 
+            miCarrito.push({id:item.id,nombre:item.nombre,precio:item.precio,cantidad:item.cantidad,img:item.img}); 
         }
-    }
-    
+    }   
 
     pintarCarrito();
 }
@@ -82,38 +114,50 @@ cargarCarrito();
 //Función que pinta la sección de las categorías
 function pintarCategorias(){
 
-    let cadena = "";
+    //Obtiene los datos del archivo
+    fetch('/categorias.json')
+    .then((response) => response.json())
+    .then((categoriasObtenidas) => {
 
-    for(const categoria of categoriasProducto){
+        let cadena = "";
 
-            cadena = cadena + `
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="" id="${categoria.id}" onchange="cambioCategoria(this)" checked>
-                <label class="form-check-label" for="${categoria.id}">
-                ${categoria.nombre}
-                </label>
-            </div>
-            `;
+        for(const categoria of categoriasObtenidas){
+    
+            const {id, nombre} = categoria;
 
-            //Pushea al array de categorias seleccionadas
-            categoriasSeleccionadas.push(categoria.id);
+            //Guarda en un array
+            categoriasProducto.push({id:id,nombre:nombre})
+    
+                cadena = cadena + `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="${id}" onchange="cambioCategoria(this)" checked>
+                    <label class="form-check-label" for="${id}">
+                    ${nombre}
+                    </label>
+                </div>
+                `;
+    
+                //Pushea al array de categorias seleccionadas
+                categoriasSeleccionadas.push(id);
+    
+        }
+        
+        //Pinta
+        let container = document.getElementById('categorias');
+        container.innerHTML = cadena;
 
-    }
+        //Llama a la función que obtiene los productos
+        pintarProductos();
 
-    let container = document.getElementById('categorias');
-    container.innerHTML = cadena;
+    });
 
 }
-
-pintarCategorias()
 
 //Guardar carrito
 const guardarCarrito = (carrito) => {
     const enJSON = JSON.stringify(carrito);
     localStorage.setItem('carrito', enJSON);
 }
-
-pintarProductos()
 
 //Botón de agregar producto
 function btnAgregar_click(idProducto) {
@@ -148,6 +192,7 @@ function btnAgregar_click(idProducto) {
     }
 
     guardarCarrito(miCarrito);
+    mostrarToast('Producto agregado',1500,'center','bottom','green');
 
     pintarProductos()
     pintarCarrito()
@@ -159,41 +204,47 @@ function pintarCarrito(){
 
     let cadena = "";
     valorIncial = 0;
-    let cantidad = 0;
-
+    let cantidadTotal = 0;
     let cantProducto = "";
-
+    const listaDePrecios = [];
 
     for(const producto of miCarrito){
-        valorIncial = valorIncial + producto.precio;
+
+        const {id, nombre, precio, cantidad, img} = producto;
+
+        valorIncial = valorIncial + precio;
+        listaDePrecios.push(precio);
 
         if (producto.cantidad==1){
             cantProducto = "";
         }else{
-            cantProducto = " (" + producto.cantidad + ")";
+            cantProducto = " (" + cantidad + ")";
         }
 
         cadena = cadena + `
         <div id="producto" class="card">
-        <img src="${producto.img}" class="card-img-top" alt="...">
+        <img src="${img}" class="card-img-top" alt="...">
         <div class="card-body">
-            <h5 class="card-title">${producto.nombre}${cantProducto}</h5>
-            <p class="card-text">$${producto.precio}</p>
-            <button type="button" id="${producto.id}" class="btn btn-lg btn-danger" onClick="btnEliminar_click(${producto.id})">Eliminar</button>
+            <h5 class="card-title">${nombre}${cantProducto}</h5>
+            <p class="card-text">$${precio}</p>
+            <button type="button" id="${id}" class="btn btn-lg btn-danger" onClick="btnEliminar_click(${id})">Eliminar</button>
         </div>
         </div>
         `;
 
-        cantidad = cantidad + producto.cantidad;
+        cantidadTotal = cantidadTotal + cantidad;
     }
+
+    console.log("El producto más caro vale: " + Math.max(...listaDePrecios));
 
     let container = document.getElementById('carrito');
     container.innerHTML = cadena;
 
-    document.getElementById("textoCarrito").innerHTML = "Mi carrito (" + cantidad + ")";
+    document.getElementById("textoCarrito").innerHTML = "Mi carrito (" + cantidadTotal + ")";
     document.getElementById("totalCarrito").innerHTML = "Total: $" + valorIncial;
 
 }
+
 
 //Botón de eliminar en carrito
 function btnEliminar_click(idProducto) {
@@ -228,6 +279,7 @@ function btnEliminar_click(idProducto) {
     }
 
     guardarCarrito(miCarrito);
+    mostrarToast('Producto eliminado',1500,'center','bottom','red');
 
     pintarProductos();
     pintarCarrito();
@@ -238,39 +290,91 @@ function btnEliminar_click(idProducto) {
 function btnFinalizar_click(){
 
     if(pagar==false){
-        if (miCarrito.length==0){
-            alert('No hay productos en el carrito')
-        }else{
-            //Oculta el bloque que muestra los productos
-            const x = document.getElementById('bloqueProductos');
-            x.style.display='none';       
 
-            document.getElementById('btnFinalizar').innerHTML = 'Finalizar';
-            pintarCuotas();
-            pagar=true;
-        }
+        //Valida que haya productos en el carrito
+        const hayStock = miCarrito.length != 0 ? false : true;
+        hayStock ? mostrarMensaje('¡Error!', 'No hay productos en el carrito', 'error') : irAPago();
+
     }else{
-            alert("Compra realizada!")
+
+        if(miCarrito.length >0){
+
+            mostrarMensaje('¡Compra realizada!', 'Su pedido se registró correctamente', 'success');
 
             //Limpia el array carrito
             for (let i = miCarrito.length; i > 0; i--) {
                 miCarrito.pop();
             }
 
-            //Muestra el bloque que muestra los productos
-            const prod = document.getElementById('bloqueProductos');
-            prod.style.display='block'; 
+            volverAlInicio()
 
-            //Oculta el bloque que muestra las cuotas
-            const cuo = document.getElementById('opcionesCuotas');
-            cuo.style.display='none'; 
-
-            document.getElementById('btnFinalizar').innerHTML = 'Ir a pagar';
-            pintarCarrito();
-            pagar=false;
+        }else{
+            mostrarMensaje('Carrito vacío','No se puede realizar el comprar porque se eliminaron todos los productos del carrito', 'error');
+            volverAlInicio();
+        }
 
     } 
 
+}
+
+function volverAlInicio(){
+
+    //Muestra el bloque que muestra los productos
+    const prod = document.getElementById('bloqueProductos');
+    prod.style.display='block'; 
+
+    const cat = document.getElementById('bloqueCategorias');
+    cat.style.display='block'; 
+
+    //Oculta el bloque que muestra las cuotas
+    const cuo = document.getElementById('opcionesCuotas');
+    cuo.style.display='none'; 
+
+    document.getElementById('btnFinalizar').innerHTML = 'Ir a pagar';
+    pintarCarrito();
+    pagar=false;
+    
+}
+
+
+//Función para mostrar mensajes
+function mostrarMensaje(titulo,texto,icono){
+
+    Swal.fire(
+        titulo,
+        texto,
+        icono
+      )
+
+}
+
+//Función para mostrar un toast
+function mostrarToast(text, duration, position, gravity, color){
+
+    Toastify({
+        text: text,
+        duration: duration,
+        position: position,
+        gravity: gravity,
+        style:{
+            background: color,
+        }
+    }).showToast();
+
+}
+
+
+function irAPago(){
+            //     //Oculta el bloque que muestra los productos
+            const x = document.getElementById('bloqueProductos');
+            x.style.display='none';       
+
+            const y = document.getElementById('bloqueCategorias');
+            y.style.display='none';       
+
+            document.getElementById('btnFinalizar').innerHTML = 'Finalizar';
+            pintarCuotas();
+            pagar=true;
 }
 
 
@@ -281,15 +385,17 @@ function pintarCuotas(){
 
     for(const cuotas of opcionesCuotas){
 
+        const {id, cantCuotas, interes} = cuotas;
+
         if(cuotas.cantCuotas==1){
             cadena = cadena + `
-            <input type="radio" name="cuota" onchange="cambioCuota(${cuotas.id})" value="${cuotas.cantCuotas}" checked>
+            <input type="radio" name="cuota" onchange="cambioCuota(${id})" value="${cantCuotas}" checked>
             <label for="c1">1 pago (sin interés)</label><br>
             `;
         }else{
             cadena = cadena + `
-            <input type="radio" name="cuota" onchange="cambioCuota(${cuotas.id})" value="${cuotas.cantCuotas}">
-            <label for="c1">${cuotas.cantCuotas} pagos (${cuotas.interes}% interés)</label><br>
+            <input type="radio" name="cuota" onchange="cambioCuota(${id})" value="${cantCuotas}">
+            <label for="c1">${cantCuotas} pagos (${interes}% interés)</label><br>
             `;
         }
             
@@ -300,6 +406,7 @@ function pintarCuotas(){
 
     const cuo = document.getElementById('opcionesCuotas');
     cuo.style.display='block'; 
+
 
 }
 
@@ -331,7 +438,7 @@ function cambioCuota(cantidad) {
 //Comprueba cambios en los checkbox de categorias
 function cambioCategoria(valor) {
 
-    //Si se deschequea lo elimina del array de las seleccionadas y se chequea la agrega
+    //Si se deschequea lo elimina del array de las seleccionadas y si chequea la agrega
     if(valor.checked==false){
 
         let cont=0;
