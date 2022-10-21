@@ -1,0 +1,11 @@
+[{"id": 1, "nombre": "Televisor", "precio": 60000, "img": "imagenes/tv.png", "stock": 2, "categoria": 1},
+                    {"id": 2, "nombre": "Heladera", "precio": 100000, "img": "imagenes/heladera.png", "stock": 2, "categoria": 2},
+                    {"id": 3, "nombre": "Microondas", "precio": 35000, "img": "imagenes/micro.png", "stock": 1, "categoria": 2},
+                    {"id": 4, "nombre": "Licuadora", "precio": 12000, "img": "imagenes/licuadora.png", "stock": 5, "categoria": 2},
+                    {"id": 5, "nombre": "Lavaplatos", "precio": 95000, "img": "imagenes/lavaplatos.png", "stock": 4, "categoria": 2},
+                    {"id": 6, "nombre": "Secador de pelo", "precio": 6000, "img": "imagenes/secador.png", "stock": 10, "categoria": 3},
+                    {"id": 7, "nombre": "Afeitadora", "precio": 5500, "img": "imagenes/afeitadora.png", "stock": 15, "categoria": 3},
+                    {"id": 8, "nombre": "Equipo de Música", "precio": 6000, "img": "imagenes/equipomusica.png", "stock": 10, "categoria": 1},
+                    {"id": 9, "nombre": "Barra de sonido", "precio": 5500, "img": "imagenes/barrasonido.png", "stock": 15, "categoria": 1},
+                    {"id": 10, "nombre": "Caca", "precio": 1, "img": "imagenes/barrasonido.png", "stock": 15, "categoria": 1}
+                    ]

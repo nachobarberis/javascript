@@ -1,0 +1,35 @@
+.contenedor{
+    width: 80%; 
+    display: flex; 
+    flex-direction: row; 
+    align-content: flex-start;
+    justify-content: center;
+    flex-wrap:wrap;
+    padding: 20px;
+    background-color: white;
+    margin:0px auto;
+    border-radius: 20px;
+}
+
+#producto{
+    padding: 20px;
+    text-align: center;
+    border: 1px solid lightgray;
+    margin-left: 20px;
+    margin-top: 10px;
+    width: 13rem;
+}
+
+#btnFinalizar{
+    width: 200px;
+    height: 40px;
+    font-size: 1.4em;
+}
+
+p{
+    font-size: 1.3em;
+}
+
+#opcionesCuotas{
+    margin-right: 20px;
+}
